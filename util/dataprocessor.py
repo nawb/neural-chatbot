@@ -82,7 +82,11 @@ class DataProcessor(object):
     def run(self):
         if not self.data_files_exist:
             print "Obtaining raw text conversation files..."
-            text_files = self.getRawFileList(self.source_data_path)
+            text_files_tmp = self.getRawFileList(self.source_data_path)
+            text_files = []
+            for f in text_files_tmp:
+                if not os.path.isdir(f):  #only keep text files, not directories
+                    text_files.append(f)
             if not self.extra_discrete_data == "":
                 extra_files = self.getRawFileList(self.extra_discrete_data)
             else:
