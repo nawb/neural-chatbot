@@ -27,7 +27,7 @@ flags.DEFINE_boolean("plot_histograms", True, "Plot histograms of sequence lengt
 flags.DEFINE_boolean("plot_scatter", True, "Make scatter plot of target vs. source length")
 
 flags.DEFINE_integer("vocab_size", 40000, "Vocabulary size.")
-flags.DEFINE_string("raw_data_dir", "data/subtitles/", "Raw text data directory")
+flags.DEFINE_string("raw_data_dir", "data/", "Raw text data directory")
 flags.DEFINE_float("train_frac", 0.7, "Percentage of data to use for \
 	training (rest goes into test set)")
 flags.DEFINE_string("tokenizer", "basic", "Choice of tokenizer, options are: basic (for now)")

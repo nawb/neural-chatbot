@@ -23,7 +23,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
 flags.DEFINE_float("lr_decay_factor", 0.99, "Learning rate decays by this much.")
 flags.DEFINE_float("grad_clip", 5.0, "Clip gradients to this norm.")
-flags.DEFINE_float("train_frac", 0.7, "Percentage of data to use for \
+flags.DEFINE_float("train_frac", 0.8, "Percentage of data to use for \
 	training (rest goes into test set)")
 flags.DEFINE_integer("batch_size", 60, "Batch size to use during training.")
 flags.DEFINE_integer("max_epoch", 6, "Maximum number of times to go over training set")
@@ -33,7 +33,7 @@ flags.DEFINE_integer("vocab_size", 40000, "Max vocabulary size.")
 flags.DEFINE_integer("dropout", 0.3, "Probability of hidden inputs being removed between 0 and 1.")
 flags.DEFINE_string("data_dir", "data/", "Directory containing processed data.")
 flags.DEFINE_string("config_file", "buckets.cfg", "path to config file contraining bucket sizes")
-flags.DEFINE_string("raw_data_dir", "data/cornell_lines/", "Raw text data directory")
+flags.DEFINE_string("raw_data_dir", "data/", "Raw text data directory")
 flags.DEFINE_string("extra_discrete_data", "", "directory to discrete conversations (can be used\
 	to have continuous and discrete data in same dataset)")
 ##TODO add more than one tokenizer
@@ -149,6 +149,7 @@ def main():
 				# Run evals on development set and print their perplexity.
 				perplexity_summary = tf.Summary()
 				eval_loss_summary = tf.Summary()
+				weights_summary = tf.Summary()
 				for bucket_id in xrange(len(_buckets)):
 					if len(test_set[bucket_id]) == 0:
 						print("  eval: empty bucket %d" % (bucket_id))
@@ -167,6 +168,12 @@ def main():
 					#need to convert from numpy.float32 to float native type
 					str_summary_eval_loss.simple_value = float(eval_loss)
 					str_summary_eval_loss.tag = "eval_loss_bucket)%d" % bucket_id
+					
+					str_summary_weights = weights_summary.value.add()
+					str_summary_weights.simple_value = target_weights
+					str_summary_weights.tag = "target_weights_bucket)%d" % bucket_id
+
+					writer.add_summary(weights_summary, current_step)
 					writer.add_summary(perplexity_summary, current_step)
 					writer.add_summary(eval_loss_summary, current_step)
 				sys.stdout.flush()
@@ -187,7 +194,7 @@ def createModel(session, path, vocab_size):
 		model.saver.restore(session, ckpt.model_checkpoint_path)
 	else:
 		print "Created model with fresh parameters."
-		session.run(tf.initialize_all_variables())
+		session.run(tf.global_variables_initializer())
 	return model
 
 def setBuckets(raw_info):
@@ -203,7 +210,7 @@ def setBuckets(raw_info):
 			target, source = tu[1].strip().split(",")
 			buckets.append((int(target), int(source)))
 	except:
-		print "Erorr in config file formatting..."
+		print "Error in config file formatting..."
 	return buckets
 
 

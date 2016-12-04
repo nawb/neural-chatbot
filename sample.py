@@ -4,7 +4,7 @@ Code in this file is for sampling use of chatbot
 
 
 import tensorflow as tf
-from tensorflow.models.rnn import rnn, rnn_cell, seq2seq
+#from tensorflow.nn.rnn import rnn, rnn_cell, seq2seq
 from tensorflow.python.platform import gfile
 import numpy as np
 import sys
@@ -25,7 +25,7 @@ max_target_length = 0
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
-flags.DEFINE_string('checkpoint_dir', 'data/checkpoints/1461979205hiddensize_100_dropout_0.5_numlayers_1', 'Directory to store/restore checkpoints')
+flags.DEFINE_string('checkpoint_dir', 'data/checkpoints/', 'Directory to store/restore checkpoints')
 flags.DEFINE_string('data_dir', "data/", "Data storage directory")
 flags.DEFINE_string('static_data', '', '(path to static data) Adds fuzzy matching layer on top of chatbot for better static responses')
 flags.DEFINE_integer('static_temp', 60, 'number between 0 and 100. The lower the number the less likely static responses will come up')
@@ -43,6 +43,7 @@ if FLAGS.static_data:
 			from fuzzywuzzy import fuzz
 			from fuzzywuzzy import process
 			onlyfiles = [f for f in listdir(FLAGS.static_data) if isfile(join(FLAGS.static_data, f))]
+			print(onlyfiles)
 			for f in onlyfiles:
 				with open(os.path.join(FLAGS.static_data, f), 'r') as f2:
 					file_lines = f2.readlines()
@@ -98,7 +99,8 @@ def main():
 
 				#TODO implement beam search
 				outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
-
+				print(outputs)
+				
 				if vocab_utils.EOS_ID in outputs:
 					outputs = outputs[:outputs.index(vocab_utils.EOS_ID)]
 
@@ -127,11 +129,13 @@ def loadModel(session, path):
 		buckets.append((params["bucket_{0}_target".format(i)],
 			params["bucket_{0}_target".format(i)]))
 		_buckets = buckets
+	print("Initializing decoder..")
 	model = models.chatbot.ChatbotModel(params["vocab_size"], _buckets,
 		params["hidden_size"], 1.0, params["num_layers"], params["grad_clip"],
 		1, params["learning_rate"], params["lr_decay_factor"], 512, True)
-	ckpt = tf.train.get_checkpoint_state(path)
-	if ckpt and gfile.Exists(ckpt.model_checkpoint_path):
+	ckpt = tf.train.get_checkpoint_state(path)	
+	#print(ckpt)
+	if ckpt: #and gfile.Exists(ckpt.model_checkpoint_path):
 		print "Reading model parameters from {0}".format(ckpt.model_checkpoint_path)
 		model.saver.restore(session, ckpt.model_checkpoint_path)
 	else:

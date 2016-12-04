@@ -132,7 +132,7 @@ class ChatbotModel(object):
 				self.gradient_norms.append(norm)
 				self.updates.append(opt.apply_gradients(
 					zip(clipped_gradients, params), global_step=self.global_step))
-		self.saver = tf.train.Saver(tf.all_variables())
+		self.saver = tf.train.Saver(tf.global_variables())#tf.all_variables())
 
 	def get_batch(self,  data, bucket_id):
 		encoder_size, decoder_size = self.buckets[bucket_id]
